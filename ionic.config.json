@@ -1,0 +1,7 @@
+{
+  "name": "vlsm",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

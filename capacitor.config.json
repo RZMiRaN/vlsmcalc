@@ -1,0 +1,6 @@
+{
+	"appId": "io.ionic.starter",
+	"appName": "vlsm",
+	"webDir": "www",
+	"bundledWebRuntime": false
+}
