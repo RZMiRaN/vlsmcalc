@@ -1,20 +1,187 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>
-      Blank
+      <ion-text color="primary" class="ion-text-center">
+        <h3><strong>VLSM Calculator</strong></h3>
+      </ion-text>
     </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="themeToggle()" alt="Toggle Dark Mode">
+        <ion-icon [name]="dark ? 'sunny' : 'moon'"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
+  <!-- <ion-header collapse="condense">
     <ion-toolbar>
-      <ion-title size="large">Blank</ion-title>
+      <ion-title size="large">
+        <ion-text color="primary" class="ion-text-center">
+          <h1><strong>VLSM Subnet Calculator</strong></h1>
+        </ion-text>
+      </ion-title>
     </ion-toolbar>
-  </ion-header>
+  </ion-header> -->
 
-  <div id="container">
-    <strong>Ready to create an app?</strong>
-    <p>Start with Ionic <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
-  </div>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <ion-grid fixed mode="md">
+      <ion-text color="primary" class="ion-text-center">
+        <h3>Network IP address and subnet mask</h3>
+      </ion-text>
+      <ion-row>
+        <ion-col sizeXs="8" offsetXs="2" sizeSm="6" offsetSm="3">
+          <ion-item>
+            <ion-label position="floating">IP Address</ion-label>
+            <ion-input
+              type="text"
+              name="ipAddress"
+              formControlName="ipAddress"
+              enterkeyhint="next"
+              inputmode="decimal"
+              maxlength="15"
+              required
+            ></ion-input>
+          </ion-item>
+          <ion-text
+            class="ion-align-self-center"
+            color="danger"
+            *ngIf="!form.get('ipAddress').valid && form.get('ipAddress').touched"
+            >Invalid IP address</ion-text
+          >
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col sizeXs="6" offsetXs="3" sizeSm="4" offsetSm="4">
+          <ion-item>
+            <ion-label position="floating">Mask</ion-label>
+            <ion-input
+              type="number"
+              name="mask"
+              formControlName="mask"
+              enterkeyhint="next"
+              inputmode="numeric"
+              min="8"
+              max="30"
+              required
+            ></ion-input>
+          </ion-item>
+          <ion-text
+            color="danger"
+            *ngIf="!form.get('mask').valid && form.get('mask').touched"
+            >Invalid mask</ion-text
+          >
+        </ion-col>
+      </ion-row>
+      <br />
+      <ion-text color="primary" class="ion-text-center">
+        <h3>Network sizes</h3>
+      </ion-text>
+      <div formGroupName="sizes">
+        <ion-row *ngFor="let network of networks">
+          <ion-col sizeXs="6" offsetXs="3" sizeSm="4" offsetSm="4">
+            <ion-item>
+              <ion-label position="floating">Size {{ network }}</ion-label>
+              <ion-input
+                type="number"
+                enterkeyhint="next"
+                inputmode="numeric"
+                [name]="'size' + network"
+                [formControlName]="'size' + network"
+                min="2"
+                required
+              ></ion-input>
+            </ion-item>
+          </ion-col>
+        </ion-row>
+      </div>
+      <ion-row>
+        <ion-col offsetXs="3" sizeXs="3" offsetSm="4" sizeSm="2">
+          <ion-button
+            color="danger"
+            expand="full"
+            size="large"
+            (click)="removeNetwork()"
+            [hidden]="networks.length < 2"
+          >
+            <ion-icon name="remove"></ion-icon>
+          </ion-button>
+        </ion-col>
+        <ion-col sizeXs="3" sizeSm="2">
+          <ion-button
+            color="success"
+            expand="full"
+            size="large"
+            (click)="addNetwork()"
+          >
+            <ion-icon name="add"></ion-icon>
+          </ion-button>
+        </ion-col>
+      </ion-row>
+      <br />
+      <ion-row>
+        <ion-col offsetXs="1" sizeXs="10" offsetMd="2" sizeMd="8">
+          <ion-button type="submit" expand="block" shape="round" size="large">
+            Calculate
+          </ion-button>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </form>
+  <ion-grid
+    *ngIf="output.length > 0"
+    class="ion-margin-top data-table"
+    id="data-table"
+  >
+    <ion-row>
+      <ion-col size="1" class="ion-text-center th">
+        <ion-text>#</ion-text>
+      </ion-col>
+      <ion-col size="4" class="ion-text-center th">
+        <ion-text>Network Identifier</ion-text>
+      </ion-col>
+      <ion-col size="1" class="ion-text-center th">
+        <ion-icon name="arrow-forward-outline"></ion-icon>
+      </ion-col>
+      <ion-col size="4" class="ion-text-center th">
+        <ion-text>Broadcast Address</ion-text>
+      </ion-col>
+      <ion-col size="2" class="ion-text-center th">
+        <ion-text>Mask</ion-text>
+      </ion-col>
+    </ion-row>
+    <ion-row *ngFor="let row of output; index as i">
+      <ion-col size="1" class="ion-text-center td">
+        <ion-text>{{i+1}}</ion-text>
+      </ion-col>
+      <ion-col size="4" class="ion-text-center td">
+        <ion-text>{{row.networkId}}</ion-text>
+      </ion-col>
+      <ion-col size="1" class="ion-text-center td">
+        <ion-icon name="arrow-forward-outline"></ion-icon>
+      </ion-col>
+      <ion-col size="4" class="ion-text-center td">
+        <ion-text>{{row.broadcast}}</ion-text>
+      </ion-col>
+      <ion-col size="2" class="ion-text-center td">
+        <ion-text>{{row.mask}}</ion-text>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+  <ion-grid class="ion-margin-top" id="copyright">
+    <ion-row>
+      <ion-col class="ion-text-center"
+        ><ion-text>
+          Made with
+          <ion-icon
+            name="heart"
+            style="vertical-align: middle"
+            color="danger"
+          ></ion-icon>
+          by
+          <a href="https://www.facebook.com/miran.kawan/">Miran</a>
+        </ion-text></ion-col
+      >
+    </ion-row>
+  </ion-grid>
 </ion-content>
